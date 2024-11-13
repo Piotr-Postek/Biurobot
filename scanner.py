@@ -2,8 +2,10 @@ from datetime import datetime
 from bluepy.btle import Scanner
 
 log_file = "scanner_results.txt"
-actual_time = datetime.now()
-format_time = actual_time.strftime("%Y-%m-%d %H:%M:%S")
+
+def get_current_time_formatted():
+    # Get the current time formatted as a string.
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
 def add_entry_to_file(filename, message):
@@ -11,36 +13,37 @@ def add_entry_to_file(filename, message):
         file.write(message)
         file.flush()
 
-
-def find_device_by_mac(target_mac):
+def scan_devices(scan_time=10.0):
+    # Scan for devices for a specified duration.
     scanner = Scanner()
-    devices = scanner.scan(10.0)  # Scanning for 10 seconds
-    
-    found = False  # Flaga, która śledzi, czy urządzenie zostało znalezione
+    return scanner.scan(scan_time)
+
+def check_device_by_mac(target_mac, devices, log_file):
+    # Check if a device with the target MAC address is in the scanned devices and log the result.
+    found = False
 
     for dev in devices:
-        print(f"Znaleziono urządzenie: {dev.addr}")  # Print to console
+        print(f"Found device: {dev.addr}")
 
-        # Check if the found device matches the target MAC address
         if dev.addr.lower() == target_mac.lower():
-            found_message = f"Urządzenie o adresie MAC {target_mac} zostało znalezione!\n"
+            found_message = f"Device with MAC address {target_mac} found!\n"
             print(found_message, end="")
             status_message = "true\n"
-            write_message = format_time + ";" + status_message
+            write_message = f"{get_current_time_formatted()};{status_message}"
             add_entry_to_file(log_file, write_message)
-            found = True  # Ustaw flagę na True, jeśli urządzenie zostało znalezione
-            break  # Exit loop if device is found
+            found = True
+            break
 
-    # Jeśli urządzenie nie zostało znalezione, wpisz odpowiednią wiadomość do pliku
     if not found:
-        not_found_message = f"Urządzenie o adresie MAC {target_mac} nie zostało znalezione.\n"
+        not_found_message = f"Device with MAC address {target_mac} not found.\n"
         print(not_found_message, end="")
         status_message = "false\n"
-        write_message = format_time + ";" + status_message
+        write_message = f"{get_current_time_formatted()};{status_message}"
         add_entry_to_file(log_file, write_message)
 
 
 # Example usage
 target_mac = "EE:EE:EE:EE:EE:EE"  # Replace with the target BLE MAC address
-find_device_by_mac(target_mac)
+devices = scan_devices()
+check_device_by_mac(target_mac, devices, log_file)
 
