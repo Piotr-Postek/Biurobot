@@ -171,7 +171,7 @@ def  scan_devices(scan_time=10.0):
 	return scanner.scan(scan_time)
 ```
 
-Example of implementation logic
+Check mac address, and write results to the file
 ```
 def  check_device_by_mac(target_mac,  devices,  log_file):
 	# Check if a device with the target MAC address is in the scanned devices and log the result.
