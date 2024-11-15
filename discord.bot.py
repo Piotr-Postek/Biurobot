@@ -1,17 +1,20 @@
 import discord
 from discord.ext import commands
+from datetime import datetime, timedelta
 
 # Variables
 idepoklucz = False
-scanned_results = "scanned_results.txt"
+status_biura = False
+scanned_results = "scanner_results.txt"
 bot_token = 'token'
+last_key_fetch_time = None  # Time when /idepoklucz was used
 
 async def read_last_line(filename):
     with open(filename, "rb") as file:
-        file.seek(-2, 2)  # Przesunięcie kursora na przedostatni bajt pliku
-        while file.read(1) != b"\n":  # Cofamy się do najbliższego znaku nowej linii
+        file.seek(-2, 2)  # move coursor to last-1 row
+        while file.read(1) != b"\n": 
             file.seek(-2, 1)
-        return file.readline().decode().strip()  # Odczytanie ostatniej linii i dekodowanie
+        return file.readline().decode().strip()  # read last line and decode
 
 
 # Set up intents
@@ -37,28 +40,38 @@ async def helpme(ctx):
 @bot.command()
 async def idepoklucz(ctx):
     global idepoklucz
-    await ctx.send('Super! Jeśli ktos wpiszę te komendę zostanie powiadomiony o twoim dzielnym dokonaniu :)')
-    idepoklucz = True
+    global status_biura
+    last_key_fetch_time = datetime.now()  # Save the time when /idepoklucz was used
+    if status_biura == False:
+        await ctx.send('Super! Jeśli ktos wpiszę te komendę zostanie powiadomiony o twoim dzielnym dokonaniu :)')
+        idepoklucz = True
+    else:
+        await ctx.send('Biuro już jest otwarte :)')
 
-# Funkcja `biuro`, która odczytuje ostatnią linię i odpowiada na podstawie statusu
+
 @bot.command()
 async def biuro(ctx):
-    global idepoklucz
+    global idepoklucz, last_key_fetch_time, status_biura
     last_line = await read_last_line(scanned_results)
     
-    # Rozdzielenie daty i statusu na podstawie średnika
+    # split date and status
     date_str, status = last_line.split(";")
     
-    # Sprawdzenie statusu i wysłanie odpowiedniej wiadomości
-    if idepoklucz == True and status=="false":
-        await ctx.send('Ktoś już poszedł po klucz! Poczekaj na swego wybawcę pod biurem')
-    elif status == "true":
+    # check if 10 minut was left
+    if last_key_fetch_time and datetime.now() - last_key_fetch_time < timedelta(minutes=10):
+        if idepoklucz == True and status == "false":
+            await ctx.send('Ktoś już poszedł po klucz! Poczekaj na swego wybawcę pod biurem')
+        return  # Prevent checking the status from the file while within the 10-minute window
+    
+    # After 10 minutes or no recent use of /idepoklucz, proceed with normal status check
+    if status == "true":
         await ctx.send(f"Biuro jest **otwarte**")
         idepoklucz = False
+        status_biura = True
     elif status == "false":
         await ctx.send(f"Biuro jest **zamknięte**")
+        status_biura = False
     else:
         await ctx.send("Błąd: Nieprawidłowy status w pliku.")
-
 # Start the bot
 bot.run(bot_token)
