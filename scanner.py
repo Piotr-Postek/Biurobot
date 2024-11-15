@@ -43,7 +43,7 @@ def check_device_by_mac(target_mac, devices, log_file):
 
 
 # Example usage
-target_mac = "EE:EE:EE:EE:EE:EE"  # Replace with the target BLE MAC address
+target_mac = "FF:FF:FF:FF:FF:FF"  # Replace with the target BLE MAC address
 devices = scan_devices()
 check_device_by_mac(target_mac, devices, log_file)
 
