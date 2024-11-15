@@ -12,7 +12,7 @@ General principle of operation. DiscordBot service is running on the device and 
 ### Dependencies
 - [discord.py](https://github.com/Rapptz/discord.py)
 - Python3.12
-- Bluepy3
+- Bluepy
 
 ## Discord APP
 
