@@ -120,16 +120,17 @@ Run your bot in console
 # Prepare service
 
 ```
-Description=DiscordBot					# service name
+[Unit]
+Description=DiscordBot
 Wants=network.target
 After=syslog.target network-online.target
 
 [Service]
-WorkingDirectory=/home/rpi/discord.bot	#script working directory
-User=root								# run as a root
-ExecStart=/usr/bin/python3.12 /home/rpi/discord.bot/discord-bot.py
-Restart=on-failure						# service will restart after fail
-RestartSec=10							# restart interval
+WorkingDirectory=/home/rpi/discord-bot-rpi
+User=rpi
+ExecStart=/usr/bin/python3 /home/rpi/discord-bot-rpi/discord.bot.py
+Restart=on-failure
+RestartSec=10
 KillMode=process
 StandardOutput=null
 
@@ -217,5 +218,35 @@ check_device_by_mac(target_mac, devices, log_file)
 #  ------------- min         ( 0 - 59 )
 
 */1 * * * * /path/to/your/script
+```
+
+# Services
+scanner.service
+```
+[Unit]
+Description=Run Discord Bot Scanner
+
+[Service]
+ExecStart=/usr/bin/python3 /home/rpi/discord-bot-rpi/scanner.py
+User=root
+WorkingDirectory=/home/rpi/discord-bot-rpi/
+Restart=on-failure
+StandardOutput=journal
+StandardError=journal
+ExecStopPost=/bin/sleep 15
+[Install]
+WantedBy=multi-user.target
+```
+scanner.timer
+```
+[Unit]
+Description=Run Discord Bot Scanner every minute
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=1min
+
+[Install]
+WantedBy=timers.target
 ```
 
